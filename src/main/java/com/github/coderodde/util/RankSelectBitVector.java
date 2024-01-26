@@ -18,7 +18,7 @@ public final class RankSelectBitVector {
     /**
      * The actual bit storage array.
      */
-    private final byte[] bytes;
+    private final long[] dataLongs;
     
     /**
      * The actual requested number of bits in this bit vector. Will be smaller 
@@ -65,16 +65,16 @@ public final class RankSelectBitVector {
         this.numberOfRequestedBits = numberOfRequestedBits;
         
         // Calculate the actual number of storage bytes:
-        int numberOfBytes = numberOfRequestedBits / Byte.SIZE + 
-                           (numberOfRequestedBits % Byte.SIZE != 0 ? 1 : 0);
+        int numberOfLongs = numberOfRequestedBits / Long.SIZE + 
+                           (numberOfRequestedBits % Long.SIZE != 0 ? 1 : 0);
         
-        numberOfBytes++; // Padding tail byte in order to simplify the last 
+        numberOfLongs++; // Padding tail long in order to simplify the last 
                          // rank/select.
         
-        bytes = new byte[numberOfBytes];
+        dataLongs = new long[numberOfLongs];
         
         // Set the rightmost, valid index:
-        this.maximumBitIndex = this.bytes.length * Byte.SIZE - 1;
+        this.maximumBitIndex = this.dataLongs.length * Long.SIZE - 1;
     }
     
     @Override
@@ -110,7 +110,7 @@ public final class RankSelectBitVector {
         
         //// Deal with the 'first'.
         // n - total number of bit slots:
-        int n = bytes.length * Byte.SIZE;
+        int n = dataLongs.length * Long.SIZE;
         
         // elll - the l value:
         this.ell = (int) Math.pow(Math.ceil(log2(n) / 2.0), 2.0);
@@ -420,10 +420,10 @@ public final class RankSelectBitVector {
      * @return the value of the target bit.
      */
     boolean readBitImpl(int index) {
-        int byteIndex = index / Byte.SIZE;
-        int targetByteBitIndex = index % Byte.SIZE;
-        byte targetByte = bytes[byteIndex];
-        return (targetByte & (1 << targetByteBitIndex)) != 0;
+        int targetLongIndex = index / Long.SIZE;
+        int targetLongBitIndex = index % Long.SIZE;
+        long targetLong = dataLongs[targetLongIndex];
+        return (targetLong & (1L << targetLongBitIndex)) != 0;
     }
     
     /**
@@ -442,11 +442,11 @@ public final class RankSelectBitVector {
      * @param index the target bit index.
      */
     private void turnBitOn(int index) {
-        int byteIndex = index / Byte.SIZE;
-        int bitIndex = index % Byte.SIZE;
-        byte mask = 1;
-        mask <<= bitIndex;
-        bytes[byteIndex] |= mask;
+        int targetLongIndex = index / Long.SIZE;
+        int targetLongBitIndex = index % Long.SIZE;
+        long mask = 1L;
+        mask <<= targetLongBitIndex;
+        dataLongs[targetLongIndex] |= mask;
     }
     
     /**
@@ -455,31 +455,36 @@ public final class RankSelectBitVector {
      * @param index the target bit index.
      */
     private void turnBitOff(int index) {
-        int byteIndex = index / Byte.SIZE;
-        int bitIndex = index % Byte.SIZE;
-        byte mask = 1;
-        mask <<= bitIndex;
-        bytes[byteIndex] &= ~mask;
+        int targetLongIndex = index / Long.SIZE;
+        int targetLongBitIndex = index % Long.SIZE;
+        long mask = 1L;
+        mask <<= targetLongBitIndex;
+        dataLongs[targetLongIndex] &= ~mask;
     }
     
     private void checkBitIndexForSelect(int selectionIndex) {
         if (selectionIndex < 0) {
             throw new IndexOutOfBoundsException(
                     String.format(
-                            "The input selection index is negative: (%d).\n",
-                            selectionIndex));
+                            "The input selection index is negative: " + 
+                            "(%d). Must be within range [1..%d].\n",
+                            selectionIndex,
+                            numberOfSetBits));
         }
         
         if (selectionIndex == 0) {
             throw new IndexOutOfBoundsException(
-                    "The input selection index is zero (0).");
+                    String.format(
+                            "The input selection index is zero (0). " + 
+                            "Must be within range [1..%d].\n",
+                            numberOfSetBits));
         }
         
         if (selectionIndex > numberOfSetBits) {
             throw new IndexOutOfBoundsException(
                     String.format(
                             "The input selection index is too large (%d). " + 
-                                    "Must be within range [1..%d].\n", 
+                            "Must be within range [1..%d].\n", 
                             selectionIndex, 
                             numberOfSetBits));
         }
@@ -586,7 +591,7 @@ public final class RankSelectBitVector {
         if (numberOfRequestedBits < 0) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Requested negative number of bits (%d).\n", 
+                            "Requested negative number of bits (%d).", 
                             numberOfRequestedBits));
         }
     }
