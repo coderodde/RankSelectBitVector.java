@@ -275,9 +275,8 @@ public final class RankSelectBitVector {
             return f + s;
         }
         
-        int selectorIndex = 
-                extractBitVector(index)
-                        .toInteger(k - 1);
+        int tmp = computeSelectorIndex(index);
+        int selectorIndex = extractBitVector(index).toInteger(k - 1);
         
         return f + s + third[selectorIndex][thirdEntryIndex];
     }
@@ -549,6 +548,42 @@ public final class RankSelectBitVector {
         }
         
         return integer;
+    }
+    
+    private int computeSelectorIndex(int i) {
+        int startBitIndex = k * (i / k);
+        int endBitIndex = Math.min(k * (i / k + 1) - 2, maximumBitIndex);
+        
+        int startLongIndex = startBitIndex / Long.SIZE; // 120 -> 1
+        int endLongIndex = endBitIndex / Long.SIZE; // 128 -> 2
+        
+        if (startLongIndex == endLongIndex) {
+            int omitBitCountLeft = startBitIndex - Long.SIZE * startLongIndex;
+            int omitBitCountRight = 
+                    Long.SIZE - endBitIndex - Long.SIZE * endLongIndex - 1;
+            
+            // 105 .. 110 -> 41 .. 46
+            long word = wordData[startLongIndex];
+            
+            word  <<= omitBitCountLeft;
+            word >>>= omitBitCountLeft + omitBitCountRight;
+            
+            return (int) word;
+        } else {
+            // Here, 'startLongIndex + 1 == endLongIndex':
+            int omitBitCountLeft = startBitIndex - Long.SIZE * startLongIndex;
+            int omitBitCountRight = endBitIndex - Long.SIZE * endLongIndex;
+            long word1 = wordData[startLongIndex];
+            long word2 = wordData[endLongIndex];
+            
+            // Clear unnecessary bits:
+            word1  <<= omitBitCountLeft;
+            word2 >>>= omitBitCountRight;
+            
+            // Stitch the words together:
+            long ret = word1 & word2;
+            return (int) ret;
+        }
     }
     
     private RankSelectBitVector extractBitVector(int i) {
