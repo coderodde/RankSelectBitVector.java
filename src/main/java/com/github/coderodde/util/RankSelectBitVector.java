@@ -274,13 +274,11 @@ public final class RankSelectBitVector {
         if (thirdEntryIndex == -1) {
             return f + s;
         }
-        // 0 vs. 1
-        // 0 vs. 6
-        int selectorIndex = computeSelectorIndex(index);
-//        int tmp = computeSelectorIndex(index);
-//        int selectorIndex = extractBitVector(index).toInteger(k - 1);
-//        selectorIndex = tmp;
-        return f + s + third[selectorIndex][thirdEntryIndex];
+        // 1 vs. 18
+        int selectorIndexF = computeSelectorIndex(index);
+        int selectorIndexS = extractBitVector(index).toInteger(k - 1);
+        
+        return f + s + third[selectorIndexF][thirdEntryIndex];
     }
     
     /**
@@ -558,9 +556,9 @@ public final class RankSelectBitVector {
         
         int startLongIndex = startBitIndex / Long.SIZE;
         int endLongIndex = endBitIndex / Long.SIZE;
+        int bitRangeLength = endBitIndex - startBitIndex + 1;
         
         if (startLongIndex == endLongIndex) {
-            int bitRangeLength = endBitIndex - startBitIndex + 1;
             int omitBitCountRight = startBitIndex - Long.SIZE * startLongIndex;
             int omitBitCountLeft = 
                     Long.SIZE - omitBitCountRight - bitRangeLength;
@@ -575,19 +573,17 @@ public final class RankSelectBitVector {
         } else {
             System.out.println("hello!");
             // Here, 'startLongIndex + 1 == endLongIndex':
-            int omitBitCountLeft = startBitIndex - Long.SIZE * startLongIndex;
-            int omitBitCountRight = endBitIndex - Long.SIZE * endLongIndex;
+            int r = Long.SIZE - (endBitIndex - Long.SIZE * endLongIndex) - 1;
             
             long word1 = wordData[startLongIndex];
             long word2 = wordData[endLongIndex];
             
-            // Clear unnecessary bits:
-            word1  <<= omitBitCountLeft;
-            word2 >>>= omitBitCountRight;
+            word1 = Long.reverse(word1);
+            word2 = Long.reverse(word2);
             
-            // Stitch the words together:
-            long ret = word1 | word2;
-            return (int) ret;
+            int len = startBitIndex - startLongIndex * Long.SIZE;
+            long resultWord = (word1 | (word2 << (r - len)));
+            return (int) resultWord;
         }
     }
     
