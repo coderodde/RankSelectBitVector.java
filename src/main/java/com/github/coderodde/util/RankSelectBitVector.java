@@ -575,8 +575,8 @@ public final class RankSelectBitVector {
     // instruction). Computes the rank of bit vector [startIndex..endIndex].
     int bruteForceRank(int startIndex, int endIndex) {
         // 13 .. 130
-        int startLongIndex = startIndex / Long.SIZE; // 0
-        int endLongIndex = endIndex / Long.SIZE;     // 2
+        int startLongIndex = startIndex / Long.SIZE;    // 0
+        int endLongIndex = endIndex / Long.SIZE;  // 2
         int rank = 0; 
         
         for (int longIndex = startLongIndex + 1;
@@ -590,7 +590,7 @@ public final class RankSelectBitVector {
             // Deal with leading bits:
             // 0001....1 | 100....1, endIndex == 64, shift to >>> 63 times
             int numberOfLeadingBits  = startIndex - startLongIndex * Long.SIZE;
-            int numberOfTrailingBits = endIndex - 1;
+            int numberOfTrailingBits = Long.SIZE - (endIndex - endLongIndex * Long.SIZE + 1);
 
             long word1 = wordData[startLongIndex];
             long word2 = wordData[endLongIndex];
