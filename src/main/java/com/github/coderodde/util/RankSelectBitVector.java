@@ -274,10 +274,12 @@ public final class RankSelectBitVector {
         if (thirdEntryIndex == -1) {
             return f + s;
         }
-        
-        int tmp = computeSelectorIndex(index);
-        int selectorIndex = extractBitVector(index).toInteger(k - 1);
-        
+        // 0 vs. 1
+        // 0 vs. 6
+        int selectorIndex = computeSelectorIndex(index);
+//        int tmp = computeSelectorIndex(index);
+//        int selectorIndex = extractBitVector(index).toInteger(k - 1);
+//        selectorIndex = tmp;
         return f + s + third[selectorIndex][thirdEntryIndex];
     }
     
@@ -554,25 +556,28 @@ public final class RankSelectBitVector {
         int startBitIndex = k * (i / k);
         int endBitIndex = Math.min(k * (i / k + 1) - 2, maximumBitIndex);
         
-        int startLongIndex = startBitIndex / Long.SIZE; // 120 -> 1
-        int endLongIndex = endBitIndex / Long.SIZE; // 128 -> 2
+        int startLongIndex = startBitIndex / Long.SIZE;
+        int endLongIndex = endBitIndex / Long.SIZE;
         
         if (startLongIndex == endLongIndex) {
-            int omitBitCountLeft = startBitIndex - Long.SIZE * startLongIndex;
-            int omitBitCountRight = 
-                    Long.SIZE - endBitIndex - Long.SIZE * endLongIndex - 1;
-            
-            // 105 .. 110 -> 41 .. 46
+            int bitRangeLength = endBitIndex - startBitIndex + 1;
+            int omitBitCountRight = startBitIndex - Long.SIZE * startLongIndex;
+            int omitBitCountLeft = 
+                    Long.SIZE - omitBitCountRight - bitRangeLength;
+                    
             long word = wordData[startLongIndex];
+            word = Long.reverse(word);
             
-            word  <<= omitBitCountLeft;
+            word  <<= omitBitCountRight;
             word >>>= omitBitCountLeft + omitBitCountRight;
             
             return (int) word;
         } else {
+            System.out.println("hello!");
             // Here, 'startLongIndex + 1 == endLongIndex':
             int omitBitCountLeft = startBitIndex - Long.SIZE * startLongIndex;
             int omitBitCountRight = endBitIndex - Long.SIZE * endLongIndex;
+            
             long word1 = wordData[startLongIndex];
             long word2 = wordData[endLongIndex];
             
@@ -581,7 +586,7 @@ public final class RankSelectBitVector {
             word2 >>>= omitBitCountRight;
             
             // Stitch the words together:
-            long ret = word1 & word2;
+            long ret = word1 | word2;
             return (int) ret;
         }
     }
