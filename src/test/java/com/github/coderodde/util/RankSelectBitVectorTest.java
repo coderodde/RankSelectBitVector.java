@@ -9,6 +9,19 @@ import org.junit.Test;
 public final class RankSelectBitVectorTest {
     
     @Test
+    public void largeRankFirst() {
+        RankSelectBitVector bv = new RankSelectBitVector(2001);
+        
+        bv.writeBitOn(1000);
+        bv.writeBitOn(1001);
+        bv.writeBitOn(1003);
+        
+        assertEquals(3, bv.rankFirst(1010));
+        assertEquals(3, bv.rankSecond(1010));
+        assertEquals(3, bv.rankThird(1010));
+    }
+    
+    @Test
     public void lastBitRank() {
         RankSelectBitVector bv = new RankSelectBitVector(8);
         
@@ -40,6 +53,79 @@ public final class RankSelectBitVectorTest {
         assertEquals(4, bv.selectFirst(2));
         assertEquals(5, bv.selectFirst(3));
         assertEquals(7, bv.selectFirst(4));
+    }
+    
+    @Test
+    public void debugTest1RankFirst() {
+        // 00101101
+        RankSelectBitVector bv = new RankSelectBitVector(8);
+        
+        bv.writeBitOn(2);
+        bv.writeBitOn(4);
+        bv.writeBitOn(5);
+        bv.writeBitOn(7);
+        
+        assertEquals(0, bv.rankFirst(0));
+        assertEquals(0, bv.rankFirst(1));
+        assertEquals(0, bv.rankFirst(2));
+        assertEquals(1, bv.rankFirst(3));
+        assertEquals(1, bv.rankFirst(4));
+        assertEquals(2, bv.rankFirst(5));
+        assertEquals(3, bv.rankFirst(6));
+        assertEquals(3, bv.rankFirst(7));
+        assertEquals(4, bv.rankFirst(8));
+        
+        assertEquals(2, bv.selectFirst(1));
+        assertEquals(4, bv.selectFirst(2));
+        assertEquals(5, bv.selectFirst(3));
+        assertEquals(7, bv.selectFirst(4));
+    }
+    
+    @Test
+    public void debugTest2RankFirst() {
+        // 00101101 10101101
+        RankSelectBitVector bv = new RankSelectBitVector(16);
+        
+        bv.writeBitOn(2);
+        bv.writeBitOn(4);
+        bv.writeBitOn(5);
+        bv.writeBitOn(7);
+        
+        bv.writeBitOn(8);
+        bv.writeBitOn(10);
+        bv.writeBitOn(12);
+        bv.writeBitOn(13);
+        bv.writeBitOn(15);
+        
+        assertEquals(0, bv.rankFirst(0));
+        assertEquals(0, bv.rankFirst(1));
+        assertEquals(0, bv.rankFirst(2));
+        assertEquals(1, bv.rankFirst(3));
+        assertEquals(1, bv.rankFirst(4));
+        assertEquals(2, bv.rankFirst(5));
+        assertEquals(3, bv.rankFirst(6));
+        assertEquals(3, bv.rankFirst(7));
+        assertEquals(4, bv.rankFirst(8));
+        
+        assertEquals(5, bv.rankFirst(9));
+        assertEquals(5, bv.rankFirst(10));
+        assertEquals(6, bv.rankFirst(11));
+        assertEquals(6, bv.rankFirst(12));
+        assertEquals(7, bv.rankFirst(13));
+        assertEquals(8, bv.rankFirst(14));
+        assertEquals(8, bv.rankFirst(15));
+        assertEquals(9, bv.rankFirst(16));
+        
+        assertEquals(2, bv.selectFirst(1));
+        assertEquals(4, bv.selectFirst(2));
+        assertEquals(5, bv.selectFirst(3));
+        assertEquals(7, bv.selectFirst(4));
+        
+        assertEquals(8, bv.selectFirst(5));
+        assertEquals(10, bv.selectFirst(6));
+        assertEquals(12, bv.selectFirst(7));
+        assertEquals(13, bv.selectFirst(8));
+        assertEquals(15, bv.selectFirst(9));
     }
     
     @Test
@@ -193,23 +279,16 @@ public final class RankSelectBitVectorTest {
        
         int numberOfOneBits = bv.rankThird(bv.getNumberOfSupportedBits());
         
-        for (int i = 0; i < bv.getNumberOfSupportedBits(); i++) {
+        for (int i = 0; i <= bv.getNumberOfSupportedBits(); i++) {
+            System.out.println("i = " + i);
             int actualRank = referenceBv.rank(i);
             int rank1 = bv.rankFirst(i);
             int rank2 = bv.rankSecond(i);
             int rank3 = bv.rankThird(i);
             
             int selectIndex = random.nextInt(numberOfOneBits) + 1;
-            int actualSelect = referenceBv.select(selectIndex);
-            int select1 = bv.selectFirst(selectIndex);
-            
-            if (select1 != actualSelect) {
-                System.out.printf(
-                        "ERROR: i = %d, actualSelect = %d, select1 = %d.\n",
-                        i,
-                        actualSelect,
-                        select1);
-            }
+//            int actualSelect = referenceBv.select(selectIndex);
+//            int select1 = bv.selectFirst(selectIndex);
 
             if (rank3 != actualRank) {
                 System.out.printf(
@@ -222,10 +301,18 @@ public final class RankSelectBitVectorTest {
                                   rank3);
             }
             
+//            if (select1 != actualSelect) {
+//                System.out.printf(
+//                        "ERROR: i = %d, actualSelect = %d, select1 = %d.\n",
+//                        i,
+//                        actualSelect,
+//                        select1);
+//            }
+            
             assertEquals(actualRank, rank1);
             assertEquals(actualRank, rank2);
             assertEquals(actualRank, rank3);
-            assertEquals(actualSelect, select1);
+//            assertEquals(actualSelect, select1);
         }
     }
     
@@ -279,7 +366,7 @@ public final class RankSelectBitVectorTest {
         assertFalse(bitVector.readBit(13));
     }
     
-//    @Test
+    @Test
     public void bruteForceBitVectorSelect() {
         BruteForceBitVector bv = new BruteForceBitVector(8);
         

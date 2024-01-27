@@ -4,7 +4,7 @@ package com.github.coderodde.util;
  * This class defines a packed bit vector that supports {@code rank()} operation
  * in {@code O(1)} time, and {@code select()} in {@code O(log n)} time.
  * 
- * @version 1.0.0
+ * @version 1.0.1
  * @since 1.0.0
  */
 public final class RankSelectBitVector {
@@ -18,7 +18,7 @@ public final class RankSelectBitVector {
     /**
      * The actual bit storage array.
      */
-    private final long[] dataLongs;
+    private final long[] wordData;
     
     /**
      * The actual requested number of bits in this bit vector. Will be smaller 
@@ -71,10 +71,10 @@ public final class RankSelectBitVector {
         numberOfLongs++; // Padding tail long in order to simplify the last 
                          // rank/select.
         
-        dataLongs = new long[numberOfLongs];
+        wordData = new long[numberOfLongs];
         
         // Set the rightmost, valid index:
-        this.maximumBitIndex = this.dataLongs.length * Long.SIZE - 1;
+        this.maximumBitIndex = this.wordData.length * Long.SIZE - 1;
     }
     
     @Override
@@ -110,7 +110,7 @@ public final class RankSelectBitVector {
         
         //// Deal with the 'first'.
         // n - total number of bit slots:
-        int n = dataLongs.length * Long.SIZE;
+        int n = wordData.length * Long.SIZE;
         
         // elll - the l value:
         this.ell = (int) Math.pow(Math.ceil(log2(n) / 2.0), 2.0);
@@ -334,12 +334,12 @@ public final class RankSelectBitVector {
         
         if (r >= bitIndex) {
             return selectImplFirst(bitIndex, 
-                              rangeStartIndex,
-                              halfRangeLength);
+                                   rangeStartIndex,
+                                   halfRangeLength);
         } else {
             return selectImplFirst(bitIndex, 
-                              rangeStartIndex + halfRangeLength,
-                              rangeLength - halfRangeLength);
+                                   rangeStartIndex + halfRangeLength,
+                                   rangeLength - halfRangeLength);
         }
     }
     
@@ -422,7 +422,7 @@ public final class RankSelectBitVector {
     boolean readBitImpl(int index) {
         int targetLongIndex = index / Long.SIZE;
         int targetLongBitIndex = index % Long.SIZE;
-        long targetLong = dataLongs[targetLongIndex];
+        long targetLong = wordData[targetLongIndex];
         return (targetLong & (1L << targetLongBitIndex)) != 0;
     }
     
@@ -446,7 +446,7 @@ public final class RankSelectBitVector {
         int targetLongBitIndex = index % Long.SIZE;
         long mask = 1L;
         mask <<= targetLongBitIndex;
-        dataLongs[targetLongIndex] |= mask;
+        wordData[targetLongIndex] |= mask;
     }
     
     /**
@@ -459,7 +459,7 @@ public final class RankSelectBitVector {
         int targetLongBitIndex = index % Long.SIZE;
         long mask = 1L;
         mask <<= targetLongBitIndex;
-        dataLongs[targetLongIndex] &= ~mask;
+        wordData[targetLongIndex] &= ~mask;
     }
     
     private void checkBitIndexForSelect(int selectionIndex) {
@@ -571,13 +571,54 @@ public final class RankSelectBitVector {
         return extractedBitVector;
     }
     
-    private int bruteForceRank(int startIndex, int endIndex) {
+    // Relies on Long.bitCount (possibly compiled to the POPCOUNT CPU 
+    // instruction). Computes the rank of bit vector [startIndex..endIndex].
+    int bruteForceRank(int startIndex, int endIndex) {
+        // 13 .. 130
+        int startLongIndex = startIndex / Long.SIZE; // 0
+        int endLongIndex = endIndex / Long.SIZE;     // 2
         int rank = 0; 
         
-        for (int i = startIndex; i <= endIndex; i++) {
-            if (readBitImpl(i)) {
-                rank++;
+        for (int longIndex = startLongIndex + 1;
+                 longIndex < endLongIndex; 
+                 longIndex++) {
+            
+            rank += Long.bitCount(wordData[longIndex]);
+        }
+        
+        if (startLongIndex != endLongIndex) {
+            // Deal with leading bits:
+            // 0001....1 | 100....1, endIndex == 64, shift to >>> 63 times
+            int numberOfLeadingBits  = startIndex - startLongIndex * Long.SIZE;
+            int numberOfTrailingBits = endIndex - 1;
+
+            long word1 = wordData[startLongIndex];
+            long word2 = wordData[endLongIndex];
+            
+            // Clear word1:
+            word1 >>>= numberOfLeadingBits;
+            word2 <<= numberOfTrailingBits;
+            
+            rank += Long.bitCount(word1) +
+                    Long.bitCount(word2);
+        } else {
+            // Here, 'startLongIndex == endLongIndex':
+            int rangeLength = endIndex - startIndex + 1;
+            int numberOfLeadingBits = startIndex - startLongIndex * Long.SIZE;
+            int numberOfTrailingBits = Long.SIZE - numberOfLeadingBits 
+                                                 - rangeLength;
+            
+            if (numberOfLeadingBits + numberOfTrailingBits == Long.SIZE) {
+                return rank;
             }
+            
+            // Grab the word:
+            long word = wordData[startLongIndex];
+            
+            word >>>= numberOfLeadingBits;
+            word  <<= numberOfLeadingBits + numberOfTrailingBits;
+            
+            rank += Long.bitCount(word);
         }
         
         return rank;
