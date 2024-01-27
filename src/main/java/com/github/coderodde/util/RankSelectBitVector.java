@@ -574,9 +574,12 @@ public final class RankSelectBitVector {
     // Relies on Long.bitCount (possibly compiled to the POPCOUNT CPU 
     // instruction). Computes the rank of bit vector [startIndex..endIndex].
     int bruteForceRank(int startIndex, int endIndex) {
-        // 13 .. 130
-        int startLongIndex = startIndex / Long.SIZE;    // 0
-        int endLongIndex = endIndex / Long.SIZE;  // 2
+        if (startIndex > endIndex) {
+            return 0;
+        }
+        
+        int startLongIndex = startIndex / Long.SIZE;
+        int endLongIndex = endIndex / Long.SIZE;
         int rank = 0; 
         
         for (int longIndex = startLongIndex + 1;
