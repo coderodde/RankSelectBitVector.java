@@ -274,10 +274,16 @@ public final class RankSelectBitVector {
         if (thirdEntryIndex == -1) {
             return f + s;
         }
-        // 1 vs. 18
+        
+        // i = 129: 36 (100100) vs. 41 (101001)
+        // i = 65:  9 (1001) vs. 18 (10010)
+        // i = 64: 8 (0|01000) vs. 18 (0|10010)
+        // i = 127: 25 (11001) vs. 41 (101001)
+        // i = 190: 92 (1011100) vs. 44 (101100)
+        // i = 253: 68 (1000100) vs. 4 (000100)
         int selectorIndexF = computeSelectorIndex(index);
         int selectorIndexS = extractBitVector(index).toInteger(k - 1);
-        
+        System.out.println(Long.toBinaryString(selectorIndexF) + " vs. " + Long.toBinaryString(selectorIndexS));
         return f + s + third[selectorIndexF][thirdEntryIndex];
     }
     
@@ -550,15 +556,15 @@ public final class RankSelectBitVector {
         return integer;
     }
     
-    private int computeSelectorIndex(int i) {
+    int computeSelectorIndex(int i) {
         int startBitIndex = k * (i / k);
         int endBitIndex = Math.min(k * (i / k + 1) - 2, maximumBitIndex);
         
         int startLongIndex = startBitIndex / Long.SIZE;
         int endLongIndex = endBitIndex / Long.SIZE;
-        int bitRangeLength = endBitIndex - startBitIndex + 1;
         
         if (startLongIndex == endLongIndex) {
+            int bitRangeLength = endBitIndex - startBitIndex + 1;
             int omitBitCountRight = startBitIndex - Long.SIZE * startLongIndex;
             int omitBitCountLeft = 
                     Long.SIZE - omitBitCountRight - bitRangeLength;
@@ -571,23 +577,44 @@ public final class RankSelectBitVector {
             
             return (int) word;
         } else {
-            System.out.println("hello!");
             // Here, 'startLongIndex + 1 == endLongIndex':
-            int r = Long.SIZE - (endBitIndex - Long.SIZE * endLongIndex) - 1;
+            //                     1 23456
+            // 8 (0|01000) vs. 18 (0|10010)
+            // ----
+            // i = 127: this = 25 (11001) vs. 41 (101001)
+            // ----
+            // i = 190: 20 (10100) vs. 44 (101100)
+            // i = 190: 92 (1011100) vs. 44 (101100)
+            // ----
+            // i = 127: 25 (11001) vs. 41 (101001)
+            // ----
+            // i = 253: 68 (1000100) vs. 4 (000100)
+            int lengthWordLo = Long.SIZE - startBitIndex
+                                        + Long.SIZE * startLongIndex;
             
-            long word1 = wordData[startLongIndex];
-            long word2 = wordData[endLongIndex];
+            int lengthWordHi = endBitIndex - Long.SIZE * endLongIndex + 1;
             
-            word1 = Long.reverse(word1);
-            word2 = Long.reverse(word2);
+            System.out.println("hello!");
             
-            int len = startBitIndex - startLongIndex * Long.SIZE;
-            long resultWord = (word1 | (word2 << (r - len)));
-            return (int) resultWord;
+            long wordLo = wordData[startLongIndex];
+            long wordHi = wordData[endLongIndex];
+            
+            wordHi = Long.reverse(wordHi);
+            
+            
+            // Clear unncessary bits:
+            wordHi >>>= Long.SIZE - lengthWordHi;
+            
+            wordLo >>>= Long.SIZE - lengthWordLo - (1 - lengthWordLo % 2); // 10
+            wordLo <<= lengthWordHi;
+            
+            int result = (int)(wordHi | wordLo);
+            
+            return result;
         }
     }
     
-    private RankSelectBitVector extractBitVector(int i) {
+    RankSelectBitVector extractBitVector(int i) {
         int startIndex = k * (i / k);
         int endIndex = Math.min(k * (i / k + 1) - 2, maximumBitIndex);
         

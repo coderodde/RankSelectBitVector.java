@@ -9,6 +9,22 @@ import org.junit.Test;
 public final class RankSelectBitVectorTest {
     
     @Test
+    public void computeSelectorIndex() {
+        Random random = new Random(13L);
+        RankSelectBitVector bv = getRandomBitVector(random);
+        // 1|01100 -> 101100 (44) -> ? -> 001101 (13)
+        bv.writeBitOn(63);
+        bv.writeBitOn(65);
+        bv.writeBitOn(66);
+        
+        bv.buildIndices();
+        
+        int result = bv.computeSelectorIndex(64);
+        
+        assertEquals(13, result);
+   }
+    
+    @Test
     public void largeRankFirst() {
         RankSelectBitVector bv = new RankSelectBitVector(2001);
         
