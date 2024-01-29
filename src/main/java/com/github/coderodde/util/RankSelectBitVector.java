@@ -274,12 +274,8 @@ public final class RankSelectBitVector {
         if (thirdEntryIndex == -1) {
             return f + s;
         }
-        // i = 121, sel: 34 (100010) vs. ext: 274 (100010010)
+        
         int selectorIndexF = computeSelectorIndex(index);
-        int tmp = extractBitVector(index).toInteger(k - 1);
-        
-//        System.out.println("i = " + index + ", sel: " + selectorIndexF + " (" + Integer.toBinaryString(selectorIndexF) + ") vs. ext: " + tmp + " (" + Integer.toBinaryString(tmp) + ")");
-        
         
         return f + s + third[selectorIndexF][thirdEntryIndex];
     }

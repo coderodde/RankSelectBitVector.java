@@ -8,7 +8,7 @@ public final class RankSelectBitVectorBenchmark {
     /**
      * The number of bits in the benchmark bit vector.
      */
-    private static final int BIT_VECTOR_LENGTH = 10_000_000;
+    private static final int BIT_VECTOR_LENGTH = 100_000_000;
     
     public static void main(String[] args) {
         long seed = parseSeed(args);
@@ -16,14 +16,14 @@ public final class RankSelectBitVectorBenchmark {
         System.out.printf("Seed = %d\n", seed);
         Random random = new Random(seed);
         
-        long st = System.currentTimeMillis();
+        long st = System.currentTimeMillis(); // st - start time.
         
         RankSelectBitVector rankSelectBitVector = createRandomBitVector(random);
         
         System.out.printf("Built the bit vector in %d milliseconds.\n",
                           System.currentTimeMillis() - st);
         
-        st = System.currentTimeMillis(); // st - start time.
+        st = System.currentTimeMillis(); 
         
         rankSelectBitVector.buildIndices();
         

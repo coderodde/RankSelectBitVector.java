@@ -376,19 +376,6 @@ public final class RankSelectBitVectorTest {
         return bv;
     }
     
-    private static BruteForceBitVector copy(RankSelectBitVector bv) {
-        BruteForceBitVector referenceBv = 
-                new BruteForceBitVector(bv.getNumberOfSupportedBits());
-        
-        for (int i = 0; i < bv.getNumberOfSupportedBits(); i++) {
-            if (bv.readBit(i)) {
-                referenceBv.writeBitOn(i);
-            }
-        }
-        
-        return referenceBv;
-    }
-    
     @Test
     public void toInteger() {
         RankSelectBitVector bitVector = new RankSelectBitVector(31);
