@@ -274,11 +274,12 @@ public final class RankSelectBitVector {
         if (thirdEntryIndex == -1) {
             return f + s;
         }
-        
+        // i = 121, sel: 34 (100010) vs. ext: 274 (100010010)
         int selectorIndexF = computeSelectorIndex(index);
         int tmp = extractBitVector(index).toInteger(k - 1);
         
-        System.out.println(selectorIndexF + " sel: (" + Integer.toBinaryString(selectorIndexF) + ") vs. ext: " + tmp + " (" + Integer.toBinaryString(tmp) + ")");
+        System.out.println("i = " + index + ", sel: " + selectorIndexF + " (" + Integer.toBinaryString(selectorIndexF) + ") vs. ext: " + tmp + " (" + Integer.toBinaryString(tmp) + ")");
+        
         
         return f + s + third[selectorIndexF][thirdEntryIndex];
     }
@@ -585,6 +586,10 @@ public final class RankSelectBitVector {
             wordLo = preprocessLowWord(wordLo, lengthWordLo, lengthWordHi);
             wordHi = preprocessHighWord(wordHi, lengthWordHi);
             
+            // Make room for bits from 
+            wordLo <<= lengthWordHi;
+            // Add bits
+            wordLo |= wordHi;
             // 273 sel: (100010001) vs. ext: 17 (10001)
             
             int result = (int)(wordHi | wordLo);
@@ -595,17 +600,26 @@ public final class RankSelectBitVector {
     private static long preprocessLowWord(long wordLo, 
                                           int lengthWordLo, 
                                           int lengthWordHi) {
-        
-        wordLo <<= Long.SIZE - lengthWordLo;
+        // Take 'lengthWordLo' most-significant bits of 'wordLo':
         wordLo >>>= Long.SIZE - lengthWordLo;
-        wordLo <<= lengthWordHi;
         
-        long mask = 0xffff_ffff_ffff_ffffL; // -1 is an alias.
-        int remainingBits = lengthWordLo + lengthWordHi;
+        // Reverse the bits of 'wordLo':
+        wordLo = Long.reverse(wordLo);
         
-        mask >>>= Long.SIZE - remainingBits + 1;
-        
-        return wordLo & mask;
+        // Shift towards least-significant bits:
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        return wordLo;
+//        
+//        wordLo <<= Long.SIZE - lengthWordLo;
+//        wordLo >>>= Long.SIZE - lengthWordLo;
+//        wordLo <<= lengthWordHi;
+//        
+//        long mask = -1L; // All bits set to one (1).
+//        int remainingBits = lengthWordLo + lengthWordHi;
+//        
+//        mask >>>= Long.SIZE - remainingBits + 1;
+//        
+//        return wordLo & mask;
     }
     
     private static long preprocessHighWord(long wordHi, int lengthWordHi) {

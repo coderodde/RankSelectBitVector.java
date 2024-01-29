@@ -350,6 +350,8 @@ public final class RankSelectBitVectorTest {
                         rank1,
                         rank2,
                         rank3);
+                
+                System.exit(-1);
             }
             
             assertEquals(rank1, rank2);
