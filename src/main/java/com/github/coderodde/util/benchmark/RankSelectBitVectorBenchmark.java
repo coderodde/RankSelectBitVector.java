@@ -8,7 +8,7 @@ public final class RankSelectBitVectorBenchmark {
     /**
      * The number of bits in the benchmark bit vector.
      */
-    private static final int BIT_VECTOR_LENGTH = 4_000_000;
+    private static final int BIT_VECTOR_LENGTH = 1_000;
     
     public static void main(String[] args) {
         long seed = parseSeed(args);

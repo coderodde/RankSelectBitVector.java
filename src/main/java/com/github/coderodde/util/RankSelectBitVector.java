@@ -276,6 +276,9 @@ public final class RankSelectBitVector {
         }
         
         int selectorIndexF = computeSelectorIndex(index);
+        int tmp = extractBitVector(index).toInteger(k - 1);
+        
+        System.out.println(selectorIndexF + " sel: (" + Integer.toBinaryString(selectorIndexF) + ") vs. ext: " + tmp + " (" + Integer.toBinaryString(tmp) + ")");
         
         return f + s + third[selectorIndexF][thirdEntryIndex];
     }
@@ -570,10 +573,7 @@ public final class RankSelectBitVector {
             
             return (int) word;
         } else {
-            // Here, 'startLongIndex + 1 == endLongIndex':
-            // i = 65: 9 (1001) vs. 18 (10010)
-            // i = 129: 36 (100100) vs. 41 (101001)
-            // i = 192: 36 (100100) vs. 44 (101100)
+            
             int lengthWordLo = Long.SIZE - startBitIndex
                                         + Long.SIZE * startLongIndex;
             
@@ -584,65 +584,8 @@ public final class RankSelectBitVector {
             
             wordLo = preprocessLowWord(wordLo, lengthWordLo, lengthWordHi);
             wordHi = preprocessHighWord(wordHi, lengthWordHi);
-//            
-//            int actualResult = extractBitVector(i).toInteger(k - 1);
-//            int result1 = stitchCase1(wordLo, 
-//                                      wordHi, 
-//                                      lengthWordLo, 
-//                                      lengthWordHi);
-//            
-//            int result2 = stitchCase2(wordLo,
-//                                      wordHi,
-//                                      lengthWordLo,
-//                                      lengthWordHi);
-//            
-//            int result3 = stitchCase3(wordLo,
-//                                      wordHi,
-//                                      lengthWordLo,
-//                                      lengthWordHi);
-//            
-//            int result4 = stitchCase4(wordLo, 
-//                                      wordHi,
-//                                      lengthWordLo, 
-//                                      lengthWordHi);
-//            
-//            int result5 = stitchCase5(wordLo, 
-//                                      wordHi,
-//                                      lengthWordLo, 
-//                                      lengthWordHi);
-//            
-//            int result6 = stitchCase6(wordLo, 
-//                                      wordHi,
-//                                      lengthWordLo, 
-//                                      lengthWordHi);
-//            
-//            int result7 = stitchCase7(wordLo, 
-//                                      wordHi,
-//                                      lengthWordLo, 
-//                                      lengthWordHi);
-//            
-//            int result8 = stitchCase8(wordLo, 
-//                                      wordHi,
-//                                      lengthWordLo, 
-//                                      lengthWordHi);
-//            
-//            if (actualResult != result1 &&
-//                actualResult != result2 &&
-//                actualResult != result3 &&
-//                actualResult != result4 &&
-//                actualResult != result5 &&
-//                actualResult != result6 &&
-//                actualResult != result7 &&
-//                actualResult != result8) {
-//                
-//                throw new IllegalStateException("MISMATCH!");
-//            }
-//            
-//            System.out.println("Actual result: " + actualResult + 
-//                    ", result1: " + result1 + ", result2: " + result2 + 
-//                    ", result3: " + result3);
             
-            
+            // 273 sel: (100010001) vs. ext: 17 (10001)
             
             int result = (int)(wordHi | wordLo);
             return result;
@@ -656,7 +599,13 @@ public final class RankSelectBitVector {
         wordLo <<= Long.SIZE - lengthWordLo;
         wordLo >>>= Long.SIZE - lengthWordLo;
         wordLo <<= lengthWordHi;
-        return wordLo;
+        
+        long mask = 0xffff_ffff_ffff_ffffL; // -1 is an alias.
+        int remainingBits = lengthWordLo + lengthWordHi;
+        
+        mask >>>= Long.SIZE - remainingBits + 1;
+        
+        return wordLo & mask;
     }
     
     private static long preprocessHighWord(long wordHi, int lengthWordHi) {
