@@ -4,6 +4,7 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -12,7 +13,7 @@ import org.junit.runner.Description;
 
 public final class RankSelectBitVectorTest {
     
-    private static final long SEED = 1706524892441L; // System.currentTimeMillis();
+    private static final long SEED = System.currentTimeMillis();
     
     static {
         System.out.printf("Seed = %d.\n", SEED);
@@ -351,14 +352,16 @@ public final class RankSelectBitVectorTest {
                         rank2,
                         rank3);
                 
-                System.exit(-1);
+                fail("rankThird and rankSecond disagreed!");
             }
             
             assertEquals(rank1, rank2);
             assertEquals(rank2, rank3);
-//            assertEquals(select2, select1);
-//            assertEquals(select2, select3);
+            assertEquals(select2, select1);
+            assertEquals(select2, select3);
         }
+        
+        System.out.println("YES!");
     }
     
     private static RankSelectBitVector getRandomBitVector(Random random) {

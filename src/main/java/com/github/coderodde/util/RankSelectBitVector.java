@@ -278,7 +278,7 @@ public final class RankSelectBitVector {
         int selectorIndexF = computeSelectorIndex(index);
         int tmp = extractBitVector(index).toInteger(k - 1);
         
-        System.out.println("i = " + index + ", sel: " + selectorIndexF + " (" + Integer.toBinaryString(selectorIndexF) + ") vs. ext: " + tmp + " (" + Integer.toBinaryString(tmp) + ")");
+//        System.out.println("i = " + index + ", sel: " + selectorIndexF + " (" + Integer.toBinaryString(selectorIndexF) + ") vs. ext: " + tmp + " (" + Integer.toBinaryString(tmp) + ")");
         
         
         return f + s + third[selectorIndexF][thirdEntryIndex];
