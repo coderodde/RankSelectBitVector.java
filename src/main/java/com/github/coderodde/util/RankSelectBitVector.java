@@ -275,12 +275,9 @@ public final class RankSelectBitVector {
             return f + s;
         }
         
+        // i = 65: 9 (1001) vs. 18 (10010)
         // i = 129: 36 (100100) vs. 41 (101001)
-        // i = 65:  9 (1001) vs. 18 (10010)
-        // i = 64: 8 (0|01000) vs. 18 (0|10010)
-        // i = 127: 25 (11001) vs. 41 (101001)
-        // i = 190: 92 (1011100) vs. 44 (101100)
-        // i = 253: 68 (1000100) vs. 4 (000100)
+        // i = 192: 36 (100100) vs. 44 (101100)
         int selectorIndexF = computeSelectorIndex(index);
         int selectorIndexS = extractBitVector(index).toInteger(k - 1);
         System.out.println(Long.toBinaryString(selectorIndexF) + " vs. " + Long.toBinaryString(selectorIndexS));
@@ -578,40 +575,63 @@ public final class RankSelectBitVector {
             return (int) word;
         } else {
             // Here, 'startLongIndex + 1 == endLongIndex':
-            //                     1 23456
-            // 8 (0|01000) vs. 18 (0|10010)
-            // ----
-            // i = 127: this = 25 (11001) vs. 41 (101001)
-            // ----
-            // i = 190: 20 (10100) vs. 44 (101100)
-            // i = 190: 92 (1011100) vs. 44 (101100)
-            // ----
-            // i = 127: 25 (11001) vs. 41 (101001)
-            // ----
-            // i = 253: 68 (1000100) vs. 4 (000100)
+            // i = 65: 9 (1001) vs. 18 (10010)
+            // i = 129: 36 (100100) vs. 41 (101001)
+            // i = 192: 36 (100100) vs. 44 (101100)
             int lengthWordLo = Long.SIZE - startBitIndex
                                         + Long.SIZE * startLongIndex;
             
             int lengthWordHi = endBitIndex - Long.SIZE * endLongIndex + 1;
             
-            System.out.println("hello!");
-            
             long wordLo = wordData[startLongIndex];
             long wordHi = wordData[endLongIndex];
             
-            wordHi = Long.reverse(wordHi);
+            int actualResult = extractBitVector(i).toInteger(k - 1);
+            int result1 = stitchCase1(wordLo, 
+                                      wordHi, 
+                                      lengthWordLo, 
+                                      lengthWordHi);
             
+            int result2 = stitchCase2(wordLo,
+                                      wordHi,
+                                      lengthWordLo,
+                                      lengthWordHi);
             
-            // Clear unncessary bits:
-            wordHi >>>= Long.SIZE - lengthWordHi;
+            System.out.println("Actual result: " + actualResult + 
+                    ", result1: " + result1 + ", result2: " + result2);
             
-            wordLo >>>= Long.SIZE - lengthWordLo - (1 - lengthWordLo % 2); // 10
-            wordLo <<= lengthWordHi;
-            
-            int result = (int)(wordHi | wordLo);
-            
+            int result = result1;
             return result;
         }
+    }
+    
+    int stitchCase1(long wordLo, 
+                    long wordHi, 
+                    int lengthWordLo, 
+                    int lengthWordHi) {
+        
+        wordLo <<= Long.SIZE - lengthWordLo;
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        
+        wordHi <<= Long.SIZE - lengthWordHi;
+        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
+        
+        return (int)(wordHi | wordLo);
+    }
+    
+    int stitchCase2(long wordLo, 
+                    long wordHi, 
+                    int lengthWordLo, 
+                    int lengthWordHi) {
+        
+        wordLo <<= Long.SIZE - lengthWordLo;
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        
+        wordHi >>>= Long.SIZE - lengthWordHi;
+        wordHi = Long.reverse(wordHi);
+        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
+        
+        return (int)(wordHi | wordLo);
     }
     
     RankSelectBitVector extractBitVector(int i) {
