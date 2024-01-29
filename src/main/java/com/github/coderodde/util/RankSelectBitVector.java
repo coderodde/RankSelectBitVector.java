@@ -275,12 +275,8 @@ public final class RankSelectBitVector {
             return f + s;
         }
         
-        // i = 65: 9 (1001) vs. 18 (10010)
-        // i = 129: 36 (100100) vs. 41 (101001)
-        // i = 192: 36 (100100) vs. 44 (101100)
         int selectorIndexF = computeSelectorIndex(index);
-        int selectorIndexS = extractBitVector(index).toInteger(k - 1);
-        System.out.println(Long.toBinaryString(selectorIndexF) + " vs. " + Long.toBinaryString(selectorIndexS));
+        
         return f + s + third[selectorIndexF][thirdEntryIndex];
     }
     
@@ -586,68 +582,87 @@ public final class RankSelectBitVector {
             long wordLo = wordData[startLongIndex];
             long wordHi = wordData[endLongIndex];
             
-            int actualResult = extractBitVector(i).toInteger(k - 1);
-            int result1 = stitchCase1(wordLo, 
-                                      wordHi, 
-                                      lengthWordLo, 
-                                      lengthWordHi);
+            wordLo = preprocessLowWord(wordLo, lengthWordLo, lengthWordHi);
+            wordHi = preprocessHighWord(wordHi, lengthWordHi);
+//            
+//            int actualResult = extractBitVector(i).toInteger(k - 1);
+//            int result1 = stitchCase1(wordLo, 
+//                                      wordHi, 
+//                                      lengthWordLo, 
+//                                      lengthWordHi);
+//            
+//            int result2 = stitchCase2(wordLo,
+//                                      wordHi,
+//                                      lengthWordLo,
+//                                      lengthWordHi);
+//            
+//            int result3 = stitchCase3(wordLo,
+//                                      wordHi,
+//                                      lengthWordLo,
+//                                      lengthWordHi);
+//            
+//            int result4 = stitchCase4(wordLo, 
+//                                      wordHi,
+//                                      lengthWordLo, 
+//                                      lengthWordHi);
+//            
+//            int result5 = stitchCase5(wordLo, 
+//                                      wordHi,
+//                                      lengthWordLo, 
+//                                      lengthWordHi);
+//            
+//            int result6 = stitchCase6(wordLo, 
+//                                      wordHi,
+//                                      lengthWordLo, 
+//                                      lengthWordHi);
+//            
+//            int result7 = stitchCase7(wordLo, 
+//                                      wordHi,
+//                                      lengthWordLo, 
+//                                      lengthWordHi);
+//            
+//            int result8 = stitchCase8(wordLo, 
+//                                      wordHi,
+//                                      lengthWordLo, 
+//                                      lengthWordHi);
+//            
+//            if (actualResult != result1 &&
+//                actualResult != result2 &&
+//                actualResult != result3 &&
+//                actualResult != result4 &&
+//                actualResult != result5 &&
+//                actualResult != result6 &&
+//                actualResult != result7 &&
+//                actualResult != result8) {
+//                
+//                throw new IllegalStateException("MISMATCH!");
+//            }
+//            
+//            System.out.println("Actual result: " + actualResult + 
+//                    ", result1: " + result1 + ", result2: " + result2 + 
+//                    ", result3: " + result3);
             
-            int result2 = stitchCase2(wordLo,
-                                      wordHi,
-                                      lengthWordLo,
-                                      lengthWordHi);
-            
-            int result3 = stitchCase3(wordLo,
-                                      wordHi,
-                                      lengthWordLo,
-                                      lengthWordHi);
-            
-            int result4 = stitchCase4(wordLo, 
-                                      wordHi,
-                                      lengthWordLo, 
-                                      lengthWordHi);
-            
-            int result5 = stitchCase5(wordLo, 
-                                      wordHi,
-                                      lengthWordLo, 
-                                      lengthWordHi);
-            
-            int result6 = stitchCase6(wordLo, 
-                                      wordHi,
-                                      lengthWordLo, 
-                                      lengthWordHi);
-            
-            int result7 = stitchCase7(wordLo, 
-                                      wordHi,
-                                      lengthWordLo, 
-                                      lengthWordHi);
-            
-            int result8 = stitchCase8(wordLo, 
-                                      wordHi,
-                                      lengthWordLo, 
-                                      lengthWordHi);
-            
-            if (actualResult != result1 &&
-                actualResult != result2 &&
-                actualResult != result3 &&
-                actualResult != result4 &&
-                actualResult != result5 &&
-                actualResult != result6 &&
-                actualResult != result7 &&
-                actualResult != result8) {
-                
-                throw new IllegalStateException("MISMATCH!");
-            }
-            
-            System.out.println("Actual result: " + actualResult + 
-                    ", result1: " + result1 + ", result2: " + result2 + 
-                    ", result3: " + result3);
             
             
-            
-            int result = result1;
+            int result = (int)(wordHi | wordLo);
             return result;
         }
+    }
+    
+    private static long preprocessLowWord(long wordLo, 
+                                          int lengthWordLo, 
+                                          int lengthWordHi) {
+        
+        wordLo <<= Long.SIZE - lengthWordLo;
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        wordLo <<= lengthWordHi;
+        return wordLo;
+    }
+    
+    private static long preprocessHighWord(long wordHi, int lengthWordHi) {
+        wordHi = Long.reverse(wordHi);
+        wordHi >>>= Long.SIZE - lengthWordHi;
+        return wordHi;
     }
     
     int stitchCase1(long wordLo, 

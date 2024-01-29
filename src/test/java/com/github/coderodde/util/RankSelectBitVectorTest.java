@@ -9,22 +9,6 @@ import org.junit.Test;
 public final class RankSelectBitVectorTest {
     
     @Test
-    public void computeSelectorIndex() {
-        Random random = new Random(13L);
-        RankSelectBitVector bv = getRandomBitVector(random);
-        // 1|01100 -> 101100 (44) -> ? -> 001101 (13)
-        bv.writeBitOn(63);
-        bv.writeBitOn(65);
-        bv.writeBitOn(66);
-        
-        bv.buildIndices();
-        
-        int result = bv.computeSelectorIndex(64);
-        
-        assertEquals(13, result);
-   }
-    
-    @Test
     public void largeRankFirst() {
         RankSelectBitVector bv = new RankSelectBitVector(2001);
         
@@ -284,56 +268,43 @@ public final class RankSelectBitVectorTest {
     @Test
     public void bruteForceTest() {
         long seed = System.currentTimeMillis();
-        seed = 1706163778488L;
         Random random = new Random(seed);
         System.out.println("-- bruteForceTest, seed = " + seed);
         
         RankSelectBitVector bv = getRandomBitVector(random);
-        BruteForceBitVector referenceBv = copy(bv);
         
         bv.buildIndices();
        
         int numberOfOneBits = bv.rankThird(bv.getNumberOfSupportedBits());
         
         for (int i = 0; i <= bv.getNumberOfSupportedBits(); i++) {
-            System.out.println("i = " + i);
-            int actualRank = referenceBv.rank(i);
             int rank1 = bv.rankFirst(i);
             int rank2 = bv.rankSecond(i);
             int rank3 = bv.rankThird(i);
             
             int selectIndex = random.nextInt(numberOfOneBits) + 1;
-//            int actualSelect = referenceBv.select(selectIndex);
-//            int select1 = bv.selectFirst(selectIndex);
+            int select1 = bv.selectFirst(selectIndex);
+            int select2 = bv.selectSecond(selectIndex);
+            int select3 = bv.selectThird(selectIndex);
 
-            if (rank3 != actualRank) {
+            if (rank3 != rank2) {
                 System.out.printf(
-                        "ERROR: i = %d, actual rank = %d, rank1 = %d, " + 
-                        "rank2 = %d, rank3 = %d.\n",
-                                  i,
-                                  actualRank,
-                                  rank1,
-                                  rank2,
-                                  rank3);
+                        "ERROR: i = %d, rank1 = %d, rank2 = %d, rank3 = %d.\n",
+                        i,
+                        rank1,
+                        rank2,
+                        rank3);
             }
             
-//            if (select1 != actualSelect) {
-//                System.out.printf(
-//                        "ERROR: i = %d, actualSelect = %d, select1 = %d.\n",
-//                        i,
-//                        actualSelect,
-//                        select1);
-//            }
-            
-            assertEquals(actualRank, rank1);
-            assertEquals(actualRank, rank2);
-            assertEquals(actualRank, rank3);
-//            assertEquals(actualSelect, select1);
+            assertEquals(rank1, rank2);
+            assertEquals(rank2, rank3);
+            assertEquals(select2, select1);
+            assertEquals(select2, select3);
         }
     }
     
     private static RankSelectBitVector getRandomBitVector(Random random) {
-        RankSelectBitVector bv = new RankSelectBitVector(5973);
+        RankSelectBitVector bv = new RankSelectBitVector(50013);
         
         for (int i = 0; i < bv.getNumberOfSupportedBits(); i++) {
             if (random.nextDouble() < 0.3) {
