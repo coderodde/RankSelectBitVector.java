@@ -325,9 +325,9 @@ public final class RankSelectBitVectorTest {
 //                        select1);
 //            }
             
-//            assertEquals(actualRank, rank1);
-//            assertEquals(actualRank, rank2);
-//            assertEquals(actualRank, rank3);
+            assertEquals(actualRank, rank1);
+            assertEquals(actualRank, rank2);
+            assertEquals(actualRank, rank3);
 //            assertEquals(actualSelect, select1);
         }
     }

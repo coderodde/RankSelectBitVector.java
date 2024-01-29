@@ -597,8 +597,29 @@ public final class RankSelectBitVector {
                                       lengthWordLo,
                                       lengthWordHi);
             
+            int result3 = stitchCase3(wordLo,
+                                      wordHi,
+                                      lengthWordLo,
+                                      lengthWordHi);
+            
+            int result4 = stitchCase4(wordLo, 
+                                      wordHi,
+                                      lengthWordLo, 
+                                      lengthWordHi);
+            
+            if (actualResult != result1 &&
+                actualResult != result2 &&
+                actualResult != result3 &&
+                actualResult != result4) {
+                
+                throw new IllegalStateException("MISMATCH!");
+            }
+            
             System.out.println("Actual result: " + actualResult + 
-                    ", result1: " + result1 + ", result2: " + result2);
+                    ", result1: " + result1 + ", result2: " + result2 + 
+                    ", result3: " + result3);
+            
+            
             
             int result = result1;
             return result;
@@ -611,10 +632,10 @@ public final class RankSelectBitVector {
                     int lengthWordHi) {
         
         wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo >>>= Long.SIZE - lengthWordLo;
+        wordLo = Long.reverse(wordLo);
         
-        wordHi <<= Long.SIZE - lengthWordHi;
-        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
+        wordHi >>>= Long.SIZE - lengthWordHi;
+        wordHi <<= lengthWordLo;
         
         return (int)(wordHi | wordLo);
     }
@@ -630,6 +651,88 @@ public final class RankSelectBitVector {
         wordHi >>>= Long.SIZE - lengthWordHi;
         wordHi = Long.reverse(wordHi);
         wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
+        
+        return (int)(wordHi | wordLo);
+    }
+    
+    int stitchCase3(long wordLo,
+                    long wordHi,
+                    int lengthWordLo,
+                    int lengthWordHi) {
+        
+        wordLo = Long.reverse(wordLo);
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        
+        wordHi >>>= Long.SIZE - lengthWordHi;
+        wordHi = Long.reverse(wordHi);
+        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
+        
+        return (int)(wordHi | wordLo);
+    }
+    
+    int stitchCase4(long wordLo,
+                    long wordHi,
+                    int lengthWordLo,
+                    int lengthWordHi) {
+        
+        wordLo = Long.reverse(wordLo);
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        
+        wordHi <<= Long.SIZE - lengthWordHi;
+        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
+        
+        return (int)(wordHi | wordLo);
+    }
+    
+    int stitchCase5(long wordLo,
+                    long wordHi,
+                    int lengthWordLo,
+                    int lengthWordHi) {
+        
+        wordHi >>>= Long.SIZE - lengthWordHi;
+        
+        wordLo <<= Long.SIZE - lengthWordLo;
+        wordLo >>>= Long.SIZE - lengthWordLo - lengthWordHi;
+        
+        return (int)(wordHi | wordLo);
+    }
+    
+    int stitchCase6(long wordLo,
+                    long wordHi,
+                    int lengthWordLo,
+                    int lengthWordHi) {
+        
+        wordHi >>>= Long.SIZE - lengthWordHi;
+        
+        wordLo = Long.reverse(wordLo);
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        wordLo <<= lengthWordHi;
+        
+        return (int)(wordHi | wordLo);
+    }
+   
+    int stitchCase7(long wordLo,
+                    long wordHi,
+                    int lengthWordLo,
+                    int lengthWordHi) {
+        
+        wordHi <<= Long.SIZE - lengthWordHi;
+        wordHi = Long.reverse(wordHi);
+        
+        wordLo >>>= Long.SIZE - lengthWordLo;
+        wordLo <<= Long.SIZE - lengthWordLo;
+        
+        return (int)(wordHi | wordLo);
+    }
+   
+    int stitchCase8(long wordLo,
+                    long wordHi,
+                    int lengthWordLo,
+                    int lengthWordHi) {
+        
+        wordHi <<= Long.SIZE - lengthWordHi;
+        wordHi = Long.reverse(wordHi);
+        
         
         return (int)(wordHi | wordLo);
     }
