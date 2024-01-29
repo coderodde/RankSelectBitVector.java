@@ -48,8 +48,9 @@ public final class RankSelectBitVector {
     private int k;
     
     // The following three tables hold the index necessary for efficient rank 
-    // operation. According to internet, has space 
-    // O(sgrt(n) * log log n * log n.
+    // operation. According to internet, 'third' has space 
+    // O(sgrt(n) * log log n * log n, 'second' has space O(n / log(n)), and
+    // 'first' has space O(n / log^2(n)).
     private int[] first;
     private int[] second;
     private int[][] third;
@@ -147,8 +148,6 @@ public final class RankSelectBitVector {
                  selectorIndex++) {
             
             third[selectorIndex] = new int[k - 1];
-            
-            // third[selectorIndex][0] is always zero (0).
             third[selectorIndex][0] = (bitIsSet(selectorIndex, k - 2) ? 1 : 0);
             
             for (int j = 1; j < k - 1; j++) {
@@ -275,9 +274,9 @@ public final class RankSelectBitVector {
             return f + s;
         }
         
-        int selectorIndexF = computeSelectorIndex(index);
+        int selectorIndex = computeSelectorIndex(index);
         
-        return f + s + third[selectorIndexF][thirdEntryIndex];
+        return f + s + third[selectorIndex][thirdEntryIndex];
     }
     
     /**
@@ -534,21 +533,6 @@ public final class RankSelectBitVector {
         return (value & (1 << bitIndex)) != 0;
     }
     
-    int toInteger(int numberOfBitsToRead) {
-        int integer = 0;
-        
-        for (int i = 0; i < numberOfBitsToRead; i++) {
-            
-            boolean bit = readBitImpl(i);
-            
-            if (bit == true) {
-                integer |= 1 << i;
-            }
-        }
-        
-        return integer;
-    }
-    
     int computeSelectorIndex(int i) {
         int startBitIndex = k * (i / k);
         int endBitIndex = Math.min(k * (i / k + 1) - 2, maximumBitIndex);
@@ -586,10 +570,8 @@ public final class RankSelectBitVector {
             wordLo <<= lengthWordHi;
             // Add bits
             wordLo |= wordHi;
-            // 273 sel: (100010001) vs. ext: 17 (10001)
             
-            int result = (int)(wordHi | wordLo);
-            return result;
+            return (int)(wordHi | wordLo);
         }
     }
     
@@ -605,17 +587,6 @@ public final class RankSelectBitVector {
         // Shift towards least-significant bits:
         wordLo >>>= Long.SIZE - lengthWordLo;
         return wordLo;
-//        
-//        wordLo <<= Long.SIZE - lengthWordLo;
-//        wordLo >>>= Long.SIZE - lengthWordLo;
-//        wordLo <<= lengthWordHi;
-//        
-//        long mask = -1L; // All bits set to one (1).
-//        int remainingBits = lengthWordLo + lengthWordHi;
-//        
-//        mask >>>= Long.SIZE - remainingBits + 1;
-//        
-//        return wordLo & mask;
     }
     
     private static long preprocessHighWord(long wordHi, int lengthWordHi) {
@@ -624,147 +595,9 @@ public final class RankSelectBitVector {
         return wordHi;
     }
     
-    int stitchCase1(long wordLo, 
-                    long wordHi, 
-                    int lengthWordLo, 
-                    int lengthWordHi) {
-        
-        wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo = Long.reverse(wordLo);
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        wordHi <<= lengthWordLo;
-        
-        return (int)(wordHi | wordLo);
-    }
-    
-    int stitchCase2(long wordLo, 
-                    long wordHi, 
-                    int lengthWordLo, 
-                    int lengthWordHi) {
-        
-        wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo = Long.reverse(wordLo);
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        wordHi = Long.reverse(wordHi);
-        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
-        
-        return (int)(wordHi | wordLo);
-    }
-    
-    int stitchCase3(long wordLo,
-                    long wordHi,
-                    int lengthWordLo,
-                    int lengthWordHi) {
-        
-        wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo >>>= Long.SIZE - lengthWordLo;
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        wordHi <<= lengthWordLo;
-        
-        return (int)(wordHi | wordLo);
-    }
-    
-    int stitchCase4(long wordLo,
-                    long wordHi,
-                    int lengthWordLo,
-                    int lengthWordHi) {
-        
-        wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo >>>= Long.SIZE - lengthWordLo;
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        wordHi = Long.reverse(wordHi);
-        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
-        
-        return (int)(wordHi | wordLo);
-    }
-    
-    int stitchCase5(long wordLo,
-                    long wordHi,
-                    int lengthWordLo,
-                    int lengthWordHi) {
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        wordHi = Long.reverse(wordHi);
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        
-        wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo = Long.reverse(wordLo);
-        wordLo <<= lengthWordHi;
-        
-        return (int)(wordHi | wordLo);
-    }
-    
-    int stitchCase6(long wordLo,
-                    long wordHi,
-                    int lengthWordLo,
-                    int lengthWordHi) {
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        wordHi = Long.reverse(wordHi);
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        
-        wordLo = Long.reverse(wordLo); // 1000|xxxx
-        wordLo >>>= Long.SIZE - lengthWordLo; // 0000|1000
-        wordLo >>>= lengthWordLo - lengthWordHi;
-        
-        return (int)(wordHi | wordLo);
-    }
-   
-    int stitchCase7(long wordLo,
-                    long wordHi,
-                    int lengthWordLo,
-                    int lengthWordHi) {
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        
-        wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo = Long.reverse(wordLo);
-        wordLo <<= lengthWordHi;
-        
-        return (int)(wordHi | wordLo);
-    }
-   
-    int stitchCase8(long wordLo,
-                    long wordHi,
-                    int lengthWordLo,
-                    int lengthWordHi) {
-        
-        wordHi >>>= Long.SIZE - lengthWordHi;
-        
-        wordLo = Long.reverse(wordLo); // 1000|xxxx
-        wordLo >>>= Long.SIZE - lengthWordLo; // 0000|1000
-        wordLo >>>= lengthWordLo - lengthWordHi;
-        
-        return (int)(wordHi | wordLo);
-    }
-    
-    RankSelectBitVector extractBitVector(int i) {
-        int startIndex = k * (i / k);
-        int endIndex = Math.min(k * (i / k + 1) - 2, maximumBitIndex);
-        
-        int extractedBitVectorLength = endIndex - startIndex + 1;
-        
-        RankSelectBitVector extractedBitVector = 
-                new RankSelectBitVector(extractedBitVectorLength);
-        
-        for (int index = extractedBitVectorLength - 1,
-                j = startIndex; 
-                j <= endIndex;
-                j++, index--) {
-            
-            extractedBitVector.writeBitImpl(index, this.readBitImpl(j));
-        }
-        
-        return extractedBitVector;
-    }
-    
     // Relies on Long.bitCount (possibly compiled to the POPCOUNT CPU 
     // instruction). Computes the rank of bit vector [startIndex..endIndex].
-    int bruteForceRank(int startIndex, int endIndex) {
+    private int bruteForceRank(int startIndex, int endIndex) {
         if (startIndex > endIndex) {
             return 0;
         }
@@ -782,9 +615,9 @@ public final class RankSelectBitVector {
         
         if (startLongIndex != endLongIndex) {
             // Deal with leading bits:
-            // 0001....1 | 100....1, endIndex == 64, shift to >>> 63 times
             int numberOfLeadingBits  = startIndex - startLongIndex * Long.SIZE;
-            int numberOfTrailingBits = Long.SIZE - (endIndex - endLongIndex * Long.SIZE + 1);
+            int numberOfTrailingBits = 
+                    Long.SIZE - (endIndex - endLongIndex * Long.SIZE + 1);
 
             long word1 = wordData[startLongIndex];
             long word2 = wordData[endLongIndex];
