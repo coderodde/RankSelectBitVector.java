@@ -607,10 +607,34 @@ public final class RankSelectBitVector {
                                       lengthWordLo, 
                                       lengthWordHi);
             
+            int result5 = stitchCase5(wordLo, 
+                                      wordHi,
+                                      lengthWordLo, 
+                                      lengthWordHi);
+            
+            int result6 = stitchCase6(wordLo, 
+                                      wordHi,
+                                      lengthWordLo, 
+                                      lengthWordHi);
+            
+            int result7 = stitchCase7(wordLo, 
+                                      wordHi,
+                                      lengthWordLo, 
+                                      lengthWordHi);
+            
+            int result8 = stitchCase8(wordLo, 
+                                      wordHi,
+                                      lengthWordLo, 
+                                      lengthWordHi);
+            
             if (actualResult != result1 &&
                 actualResult != result2 &&
                 actualResult != result3 &&
-                actualResult != result4) {
+                actualResult != result4 &&
+                actualResult != result5 &&
+                actualResult != result6 &&
+                actualResult != result7 &&
+                actualResult != result8) {
                 
                 throw new IllegalStateException("MISMATCH!");
             }
@@ -646,7 +670,7 @@ public final class RankSelectBitVector {
                     int lengthWordHi) {
         
         wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo >>>= Long.SIZE - lengthWordLo;
+        wordLo = Long.reverse(wordLo);
         
         wordHi >>>= Long.SIZE - lengthWordHi;
         wordHi = Long.reverse(wordHi);
@@ -660,12 +684,11 @@ public final class RankSelectBitVector {
                     int lengthWordLo,
                     int lengthWordHi) {
         
-        wordLo = Long.reverse(wordLo);
+        wordLo <<= Long.SIZE - lengthWordLo;
         wordLo >>>= Long.SIZE - lengthWordLo;
         
         wordHi >>>= Long.SIZE - lengthWordHi;
-        wordHi = Long.reverse(wordHi);
-        wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
+        wordHi <<= lengthWordLo;
         
         return (int)(wordHi | wordLo);
     }
@@ -675,10 +698,11 @@ public final class RankSelectBitVector {
                     int lengthWordLo,
                     int lengthWordHi) {
         
-        wordLo = Long.reverse(wordLo);
+        wordLo <<= Long.SIZE - lengthWordLo;
         wordLo >>>= Long.SIZE - lengthWordLo;
         
-        wordHi <<= Long.SIZE - lengthWordHi;
+        wordHi >>>= Long.SIZE - lengthWordHi;
+        wordHi = Long.reverse(wordHi);
         wordHi >>>= Long.SIZE - lengthWordHi - lengthWordLo;
         
         return (int)(wordHi | wordLo);
@@ -690,9 +714,12 @@ public final class RankSelectBitVector {
                     int lengthWordHi) {
         
         wordHi >>>= Long.SIZE - lengthWordHi;
+        wordHi = Long.reverse(wordHi);
+        wordHi >>>= Long.SIZE - lengthWordHi;
         
         wordLo <<= Long.SIZE - lengthWordLo;
-        wordLo >>>= Long.SIZE - lengthWordLo - lengthWordHi;
+        wordLo = Long.reverse(wordLo);
+        wordLo <<= lengthWordHi;
         
         return (int)(wordHi | wordLo);
     }
@@ -703,10 +730,12 @@ public final class RankSelectBitVector {
                     int lengthWordHi) {
         
         wordHi >>>= Long.SIZE - lengthWordHi;
+        wordHi = Long.reverse(wordHi);
+        wordHi >>>= Long.SIZE - lengthWordHi;
         
-        wordLo = Long.reverse(wordLo);
-        wordLo >>>= Long.SIZE - lengthWordLo;
-        wordLo <<= lengthWordHi;
+        wordLo = Long.reverse(wordLo); // 1000|xxxx
+        wordLo >>>= Long.SIZE - lengthWordLo; // 0000|1000
+        wordLo >>>= lengthWordLo - lengthWordHi;
         
         return (int)(wordHi | wordLo);
     }
@@ -716,11 +745,11 @@ public final class RankSelectBitVector {
                     int lengthWordLo,
                     int lengthWordHi) {
         
-        wordHi <<= Long.SIZE - lengthWordHi;
-        wordHi = Long.reverse(wordHi);
+        wordHi >>>= Long.SIZE - lengthWordHi;
         
-        wordLo >>>= Long.SIZE - lengthWordLo;
         wordLo <<= Long.SIZE - lengthWordLo;
+        wordLo = Long.reverse(wordLo);
+        wordLo <<= lengthWordHi;
         
         return (int)(wordHi | wordLo);
     }
@@ -730,9 +759,11 @@ public final class RankSelectBitVector {
                     int lengthWordLo,
                     int lengthWordHi) {
         
-        wordHi <<= Long.SIZE - lengthWordHi;
-        wordHi = Long.reverse(wordHi);
+        wordHi >>>= Long.SIZE - lengthWordHi;
         
+        wordLo = Long.reverse(wordLo); // 1000|xxxx
+        wordLo >>>= Long.SIZE - lengthWordLo; // 0000|1000
+        wordLo >>>= lengthWordLo - lengthWordHi;
         
         return (int)(wordHi | wordLo);
     }
