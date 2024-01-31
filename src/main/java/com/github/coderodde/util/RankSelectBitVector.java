@@ -5,9 +5,12 @@ import static java.lang.Math.pow;
 
 /**
  * This class defines a packed bit vector that supports {@code rank()} operation
- * in {@code O(1)} time, and {@code select()} in {@code O(log n)} time.
+ * in {@code O(1)} time, and {@code select()} in {@code O(log n)} time. This 
+ * implementation counts the bits via {@link java.lang.Long#bitCount(long)}. We 
+ * also tried to JNI POPCNT-instruction, but it was somewhat slower than 
+ * {@linkplain java.lang.Long#bitCount(long) }.
  * 
- * @version 1.0.1
+ * @version 1.0.2
  * @since 1.0.0
  */
 public final class RankSelectBitVector {
