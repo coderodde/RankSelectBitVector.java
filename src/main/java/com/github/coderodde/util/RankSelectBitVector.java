@@ -1,5 +1,8 @@
 package com.github.coderodde.util;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.pow;
+
 /**
  * This class defines a packed bit vector that supports {@code rank()} operation
  * in {@code O(1)} time, and {@code select()} in {@code O(log n)} time.
@@ -27,12 +30,6 @@ public final class RankSelectBitVector {
     private final int numberOfRequestedBits;
     
     /**
-     * Denotes index of the most rightmost meaningful bit. Will be set to 
-     * {@code numberOfRequestedBits - 1}.
-     */
-    private final int maximumBitIndex;
-    
-    /**
      * Caches the number of bits set to one (1).
      */
     private int numberOfSetBits;
@@ -40,20 +37,20 @@ public final class RankSelectBitVector {
     /**
      * The block size in the {@code first} table.
      */
-    private int ell;
+    private final int ell;
     
     /**
      * The block size in the {@code second} table.
      */
-    private int k;
+    private final int k;
     
     // The following three tables hold the index necessary for efficient rank 
     // operation. According to internet, 'third' has space 
     // O(sgrt(n) * log log n * log n, 'second' has space O(n / log(n)), and
     // 'first' has space O(n / log^2(n)).
-    private int[] first;
-    private int[] second;
-    private int[][] third;
+    private final int[] first;
+    private final int[] second;
+    private final int[][] third;
     
     /**
      * Constructs a new bit vector.
@@ -72,10 +69,16 @@ public final class RankSelectBitVector {
         numberOfLongs++; // Padding tail long in order to simplify the last 
                          // rank/select.
         
-        wordData = new long[numberOfLongs];
+        this.wordData = new long[numberOfLongs];
         
-        // Set the rightmost, valid index:
-        this.maximumBitIndex = this.wordData.length * Long.SIZE - 1;
+        int n = wordData.length * Long.SIZE;
+        
+        this.ell = (int) pow(ceil(log2(n) / 2.0), 2.0);
+        this.k = (int) ceil(log2(n) / 2.0);
+        
+        this.first = new int[n / ell + 1];
+        this.second = new int[n / k + 1];
+        this.third = new int[(int) pow(2.0, this.k - 1)][];
     }
     
     @Override
@@ -114,9 +117,6 @@ public final class RankSelectBitVector {
         int n = wordData.length * Long.SIZE;
         
         // elll - the l value:
-        this.ell = (int) Math.pow(Math.ceil(log2(n) / 2.0), 2.0);
-        this.first = new int[n / ell + 1];
-        
         for (int i = ell; i < n; i++) {
             if (i % ell == 0) {
                 int firstArraySlotIndex = i / ell;
@@ -131,9 +131,6 @@ public final class RankSelectBitVector {
         }
         
         //// Deal with the 'second'.
-        this.k = (int) Math.ceil(log2(n) / 2.0);
-        this.second = new int[n / k + 1];
-        
         for (int i = k; i < n; i++) {
             if (i % k == 0) {
                 second[i/k] = bruteForceRank(ell * (i / ell), i - 1);
@@ -141,8 +138,6 @@ public final class RankSelectBitVector {
         }
         
         //// Deal with the 'third': four Russians' technique:
-        this.third = new int[(int) Math.pow(2.0, k - 1)][];
-        
         for (int selectorIndex = 0;
                  selectorIndex < third.length;
                  selectorIndex++) {
@@ -535,7 +530,7 @@ public final class RankSelectBitVector {
     
     int computeSelectorIndex(int i) {
         int startBitIndex = k * (i / k);
-        int endBitIndex = Math.min(k * (i / k + 1) - 2, maximumBitIndex);
+        int endBitIndex = k * (i / k + 1) - 2;
         
         int startLongIndex = startBitIndex / Long.SIZE;
         int endLongIndex = endBitIndex / Long.SIZE;
