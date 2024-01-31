@@ -360,8 +360,6 @@ public final class RankSelectBitVectorTest {
             assertEquals(select2, select1);
             assertEquals(select2, select3);
         }
-        
-        System.out.println("YES!");
     }
     
     private static RankSelectBitVector getRandomBitVector(Random random) {

@@ -1,9 +1,9 @@
 package com.github.coderodde.util.benchmark;
 
-import com.github.coderodde.util.RankSelectBitVector;
+import com.github.coderodde.util.FastRankSelectBitVector;
 import java.util.Random;
 
-public final class RankSelectBitVectorBenchmark {
+public final class FastRankSelectBitVectorBenchmark {
     
     /**
      * The number of bits in the benchmark bit vector.
@@ -11,7 +11,7 @@ public final class RankSelectBitVectorBenchmark {
     private static final int BIT_VECTOR_LENGTH = 50_000_000;
     
     public static void main(String[] args) {
-        System.out.println("=== RankSelectBitVectorBenchmark ===");
+        System.out.println("=== FastRankSelectBitVectorBenchmark ===");
         
         long seed = parseSeed(args);
         
@@ -20,7 +20,7 @@ public final class RankSelectBitVectorBenchmark {
         
         long st = System.currentTimeMillis(); // st - start time.
         
-        RankSelectBitVector rankSelectBitVector = createRandomBitVector(random);
+        FastRankSelectBitVector rankSelectBitVector = createRandomBitVector(random);
         
         System.out.printf("Built the bit vector in %d milliseconds.\n",
                           System.currentTimeMillis() - st);
@@ -41,9 +41,9 @@ public final class RankSelectBitVectorBenchmark {
         benchmarkSelects(rankSelectBitVector);
     }
     
-    private static RankSelectBitVector createRandomBitVector(Random random) {
-        RankSelectBitVector rankSelectBitVector =
-                new RankSelectBitVector(BIT_VECTOR_LENGTH);
+    private static FastRankSelectBitVector createRandomBitVector(Random random) {
+        FastRankSelectBitVector rankSelectBitVector =
+                new FastRankSelectBitVector(BIT_VECTOR_LENGTH);
         
         for (int bitIndex = 0;
                 bitIndex != rankSelectBitVector.getNumberOfSupportedBits(); 
@@ -84,7 +84,7 @@ public final class RankSelectBitVectorBenchmark {
     }
     
     private static void
-         benchmarkRanks(RankSelectBitVector rankSelectBitVector) {
+         benchmarkRanks(FastRankSelectBitVector rankSelectBitVector) {
         
         int numberOfBits = rankSelectBitVector.getNumberOfSupportedBits();
         
@@ -139,7 +139,7 @@ public final class RankSelectBitVectorBenchmark {
     }
          
     private static void
-         benchmarkSelects(RankSelectBitVector rankSelectBitVector) {
+         benchmarkSelects(FastRankSelectBitVector rankSelectBitVector) {
         int numberOfSetBits = rankSelectBitVector.getNumberOfSetBits();
         
         int[] answers1 = new int[numberOfSetBits + 1];
